@@ -10,6 +10,18 @@ export function InsightExtractor() {
   const addInsight = useAppStore((s) => s.addInsight)
   const deleteInsight = useAppStore((s) => s.deleteInsight)
   const [showForm, setShowForm] = useState(false)
+  const [insTitle, setInsTitle] = useState('')
+  const [insDesc, setInsDesc] = useState('')
+  const [insPriority, setInsPriority] = useState<InsightPriority>('medium')
+  const [insType, setInsType] = useState<PainPointType>('usability')
+
+  const resetForm = () => { setInsTitle(''); setInsDesc(''); setInsPriority('medium'); setInsType('usability') }
+  const handleSave = () => {
+    if (!insTitle) return
+    addInsight({ id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36), interviewId: '', title: insTitle, description: insDesc, priority: insPriority, painPointType: insType, quotes: [] })
+    resetForm(); setShowForm(false)
+  }
+  const handleCancel = () => { resetForm(); setShowForm(false) }
 
   if (insights.length === 0 && !showForm) return (
     <div className="space-y-2">
@@ -40,25 +52,17 @@ export function InsightExtractor() {
       ))}
       {showForm ? (
         <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
-          <input id="ins-title" placeholder={t('title')} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm" />
-          <textarea id="ins-desc" placeholder={t('description')} rows={2} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm resize-none" />
-          <select id="ins-priority" className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+          <input value={insTitle} onChange={(e) => setInsTitle(e.target.value)} placeholder={t('title')} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm" />
+          <textarea value={insDesc} onChange={(e) => setInsDesc(e.target.value)} placeholder={t('description')} rows={2} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm resize-none" />
+          <select value={insPriority} onChange={(e) => setInsPriority(e.target.value as InsightPriority)} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
             {Object.entries(PRIORITY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <select id="ins-type" className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+          <select value={insType} onChange={(e) => setInsType(e.target.value as PainPointType)} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
             {Object.entries(PAINPOINT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
           <div className="flex gap-2">
-            <button onClick={() => {
-              const title = (document.getElementById('ins-title') as HTMLInputElement).value
-              const description = (document.getElementById('ins-desc') as HTMLTextAreaElement).value
-              const priority = (document.getElementById('ins-priority') as HTMLSelectElement).value as InsightPriority
-              const painPointType = (document.getElementById('ins-type') as HTMLSelectElement).value as PainPointType
-              if (!title) return
-              addInsight({ id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36), interviewId: '', title, description, priority, painPointType, quotes: [] })
-              setShowForm(false)
-            }} className="text-xs bg-violet-600 hover:bg-violet-500 px-3 py-1 rounded">{t('save')}</button>
-            <button onClick={() => setShowForm(false)} className="text-xs text-slate-400">{t('cancel')}</button>
+            <button onClick={handleSave} className="text-xs bg-violet-600 hover:bg-violet-500 px-3 py-1 rounded">{t('save')}</button>
+            <button onClick={handleCancel} className="text-xs text-slate-400">{t('cancel')}</button>
           </div>
         </div>
       ) : (

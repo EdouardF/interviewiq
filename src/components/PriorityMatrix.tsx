@@ -10,6 +10,17 @@ export function PriorityMatrix() {
   const addPainPoint = useAppStore((s) => s.addPainPoint)
   const deletePainPoint = useAppStore((s) => s.deletePainPoint)
   const [showForm, setShowForm] = useState(false)
+  const [ppTitle, setPpTitle] = useState('')
+  const [ppType, setPpType] = useState<PainPointType>('usability')
+  const [ppSeverity, setPpSeverity] = useState<InsightPriority>('medium')
+
+  const resetForm = () => { setPpTitle(''); setPpType('usability'); setPpSeverity('medium') }
+  const handleSave = () => {
+    if (!ppTitle) return
+    addPainPoint({ id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36), title: ppTitle, type: ppType, frequency: 1, severity: ppSeverity, interviews: [] })
+    resetForm(); setShowForm(false)
+  }
+  const handleCancel = () => { resetForm(); setShowForm(false) }
 
   const highPriority = painPoints.filter((p) => p.severity === 'critical' || p.severity === 'high')
   const medPriority = painPoints.filter((p) => p.severity === 'medium')
@@ -47,23 +58,16 @@ export function PriorityMatrix() {
       {lowPriority.length > 0 && renderGroup(`🟢 ${PRIORITY_LABELS.low}`, lowPriority, 'text-slate-400')}
       {showForm ? (
         <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
-          <input id="pp-title" placeholder={t('title')} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm" />
-          <select id="pp-type" className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+          <input value={ppTitle} onChange={(e) => setPpTitle(e.target.value)} placeholder={t('title')} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm" />
+          <select value={ppType} onChange={(e) => setPpType(e.target.value as PainPointType)} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
             {Object.entries(PAINPOINT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <select id="pp-severity" className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+          <select value={ppSeverity} onChange={(e) => setPpSeverity(e.target.value as InsightPriority)} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
             {Object.entries(PRIORITY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
           <div className="flex gap-2">
-            <button onClick={() => {
-              const title = (document.getElementById('pp-title') as HTMLInputElement).value
-              const type = (document.getElementById('pp-type') as HTMLSelectElement).value as PainPointType
-              const severity = (document.getElementById('pp-severity') as HTMLSelectElement).value as InsightPriority
-              if (!title) return
-              addPainPoint({ id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36), title, type, frequency: 1, severity, interviews: [] })
-              setShowForm(false)
-            }} className="text-xs bg-violet-600 hover:bg-violet-500 px-3 py-1 rounded">{t('save')}</button>
-            <button onClick={() => setShowForm(false)} className="text-xs text-slate-400">{t('cancel')}</button>
+            <button onClick={handleSave} className="text-xs bg-violet-600 hover:bg-violet-500 px-3 py-1 rounded">{t('save')}</button>
+            <button onClick={handleCancel} className="text-xs text-slate-400">{t('cancel')}</button>
           </div>
         </div>
       ) : (

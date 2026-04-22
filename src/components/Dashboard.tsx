@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useI18n } from '../i18n/I18nProvider'
 import { useAppStore, useInterviewStats } from '../store/useAppStore'
-import { INTERVIEW_STATUS_LABELS, formatDuration, generateId } from '../utils/helpers'
+import { INTERVIEW_STATUS_LABELS, generateId } from '../utils/helpers'
 import type { InterviewStatus } from '../types'
 import { InterviewList } from './InterviewList'
 import { InsightExtractor } from './InsightExtractor'
@@ -14,6 +14,18 @@ export function Dashboard() {
   const stats = useInterviewStats()
   const addInterview = useAppStore((s) => s.addInterview)
   const [showAdd, setShowAdd] = useState(false)
+  const [ivPart, setIvPart] = useState('')
+  const [ivStatus, setIvStatus] = useState<InterviewStatus>('scheduled')
+  const [ivDur, setIvDur] = useState('')
+  const [ivNotes, setIvNotes] = useState('')
+
+  const resetForm = () => { setIvPart(''); setIvStatus('scheduled'); setIvDur(''); setIvNotes('') }
+  const handleSave = () => {
+    if (!ivPart) return
+    addInterview({ id: generateId(), participant: ivPart, status: ivStatus, duration: parseInt(ivDur) || undefined, date: new Date().toISOString().split('T')[0], notes: ivNotes || undefined })
+    resetForm(); setShowAdd(false)
+  }
+  const handleCancel = () => { resetForm(); setShowAdd(false) }
 
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-900 dark:text-white transition-colors">
@@ -44,23 +56,15 @@ export function Dashboard() {
           </div>
           {showAdd && (
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 mb-3 space-y-2">
-              <input id="iv-part" placeholder={t('participant')} className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm" />
-              <select id="iv-status" className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-sm">
+              <input value={ivPart} onChange={(e) => setIvPart(e.target.value)} placeholder={t('participant')} className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm" />
+              <select value={ivStatus} onChange={(e) => setIvStatus(e.target.value as InterviewStatus)} className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-sm">
                 {Object.entries(INTERVIEW_STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
-              <input id="iv-dur" type="number" placeholder={t('duration')} className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm" />
-              <textarea id="iv-notes" placeholder={t('notes')} rows={2} className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm resize-none" />
+              <input value={ivDur} onChange={(e) => setIvDur(e.target.value)} type="number" placeholder={t('duration')} className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm" />
+              <textarea value={ivNotes} onChange={(e) => setIvNotes(e.target.value)} placeholder={t('notes')} rows={2} className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm resize-none" />
               <div className="flex gap-2">
-                <button onClick={() => {
-                  const participant = (document.getElementById('iv-part') as HTMLInputElement).value
-                  const status = (document.getElementById('iv-status') as HTMLSelectElement).value as InterviewStatus
-                  const duration = parseInt((document.getElementById('iv-dur') as HTMLInputElement).value) || undefined
-                  const notes = (document.getElementById('iv-notes') as HTMLTextAreaElement).value || undefined
-                  if (!participant) return
-                  addInterview({ id: generateId(), participant, status, duration, date: new Date().toISOString().split('T')[0], notes })
-                  setShowAdd(false)
-                }} className="text-xs bg-violet-600 hover:bg-violet-500 px-3 py-1 rounded">{t('save')}</button>
-                <button onClick={() => setShowAdd(false)} className="text-xs text-slate-400">{t('cancel')}</button>
+                <button onClick={handleSave} className="text-xs bg-violet-600 hover:bg-violet-500 px-3 py-1 rounded">{t('save')}</button>
+                <button onClick={handleCancel} className="text-xs text-slate-400">{t('cancel')}</button>
               </div>
             </div>
           )}
